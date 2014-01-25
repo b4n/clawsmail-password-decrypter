@@ -17,20 +17,23 @@ RM         ?= rm -f
 CFLAGS  ?= -O2 -g
 LDFLAGS ?=
 
-PROGRAM_CFLAGS  += $(shell $(PKG_CONFIG) --cflags $(PROGRAM_PACKAGES) 2>/dev/null)
-PROGRAM_LDFLAGS += $(shell $(PKG_CONFIG) --libs $(PROGRAM_PACKAGES) 2>/dev/null)
+PROGRAM_CFLAGS  += `$(PKG_CONFIG) --cflags $(PROGRAM_PACKAGES) 2>/dev/null`
+PROGRAM_LDFLAGS += `$(PKG_CONFIG) --libs $(PROGRAM_PACKAGES) 2>/dev/null`
 
-OBJECTS  = $(PROGRAM_SOURCES:%.c=%.o)
+OBJECTS  = $(PROGRAM_SOURCES:.c=.o)
 
+
+.SUFFIXES:
+.SUFFIXES: .c .o
 
 .PHONY: all clean distclean
 
 all: $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)
-	$(CC) -o $@ $^ $(PROGRAM_LDFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $(OBJECTS) $(PROGRAM_LDFLAGS) $(LDFLAGS)
 
-%.o: %.c
+.c.o:
 	$(CC) -o $@ -c $< $(PROGRAM_CFLAGS) $(CFLAGS)
 
 clean:
