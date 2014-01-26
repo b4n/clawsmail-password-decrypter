@@ -70,11 +70,13 @@ def accountrc_decrypt(filename, key=PASSCRYPT_KEY):
         try:
             try:
                 address = p.get(s, 'address')
+                account = p.get(s, 'account_name')
             except:
                 address = '<unknown>'
+                account = '<unknown>'
 
             password = pass_decrypt(p.get(s, 'password'), key)
-            print('password for %s is "%s"' % (address, password))
+            print('password for %s, %s is "%s"' % (account, address, password))
         except Exception as e:
             print('Error resolving password for account "%s": %s' % (s, e))
 

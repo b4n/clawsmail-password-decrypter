@@ -100,12 +100,14 @@ static void accountrc_decrypt(const gchar *filename)
 		for (i = 0; i < n_groups; i++) {
 			gchar *input = g_key_file_get_value(kf, groups[i], "password", NULL);
 			gchar *address = g_key_file_get_value(kf, groups[i], "address", NULL);
+			gchar *account = g_key_file_get_value(kf, groups[i], "account_name", NULL);
 			gchar *output = input ? pass_decrypt(input) : NULL;
 
-			printf("password for %s is \"%s\"\n", address, output);
+			printf("password for %s, %s is \"%s\"\n", account, address, output);
 			g_free(input);
 			g_free(output);
 			g_free(address);
+			g_free(account);
 		}
 		g_strfreev(groups);
 	}
