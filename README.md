@@ -34,11 +34,6 @@ and ClawsMail is written in C so I could reuse their routine without caring
 further about what it actually does, but re-did it in Python when thinking
 about releasing it because I guess it'll be easier to use for you.
 
-Unfortunately, I wasn't able to find how to decrypt the DES-ECB used under
-FreeBSD with Python, because it needs to decrypt blocks of sizes not multiple
-of 8, which doesn't seem really possible -- though ClawsMail does it.  I'm all
-ears if you find me a solution here.  But for now, for the FreeBSD users I also
-release the C version that uses the actual ClawsMail code so works everywhere.
 
 Python tool
 -----------
@@ -65,6 +60,9 @@ This will give you something like this::
 Note that DES requires a key.  By default ClawsMail uses `passkey0` as the key,
 but this can be changed at build time.  The tool uses this as the default, but
 supports the `-k <key>` switch if you need to use another one.
+
+To decrypt passwords from a FreeBSD installation, use the `--freebsd` option,
+which is an alias of the `--mode=ECB` option.
 
 
 C tool
@@ -96,3 +94,17 @@ don't build on FreeBSD, you need to define the `NEED_DES_ECB` C preprocessor
 constant.  You can use::
 
     make CLAWSMAIL_SRC=/path/to/claws-mail/src CFLAGS='-DNEED_DES_ECB'
+
+
+Note on encryption under FreeBSD (DES-ECB)
+------------------------------------------
+
+As mentioned above, for some reason ClawsMail encrypts passwords using DES-ECB
+instead of DES-CFB under FreeBSD.
+
+DES-ECB doesn't allow encrypted blocks of sizes not multiple of 8, and
+ClawsMail doesn't introduce padding nor checks the encryption actually
+succeeded.  This means that password encryption under FreeBSD will fail
+silently if the password length (in bytes) is not multiple of 8, leading to the
+encryption phase simply being a no-op, meaning the password will only be
+transformed through Base64.  This sounds bad, but it's how it is.

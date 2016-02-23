@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 #
-# Copyright (C) 2013 Colomban Wendling <ban@herbesfolles.org>
+# Copyright (C) 2013-2016 Colomban Wendling <ban@herbesfolles.org>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -38,25 +38,22 @@ from ConfigParser import ConfigParser
 PASSCRYPT_KEY = b'passkey0'
 
 
-def pass_decrypt(p, key=PASSCRYPT_KEY):
-    """
-    Decrypts a password from ClawsMail.  This doesn't work for password stored
-    under FreeBSD because then ClawsMail uses DES ECB mode, but apparently
-    feeds it data of non-modulo 8 size.  This looks impossible, but apparently
-    it works.  I checked the implementation of ecb_crypt() from the glibc, and
-    it seems to actually not accept length non-modulo 8, although the ClawsMail
-    code DOES work with it:
-
-        des_setparity(des_key);
-        ecb_crypt(des_key, password, len, DES_ENCRYPT);
-
-    even when then length is clearly non-modulo 8.  I have no idea hot to deal
-    with this then, so this won't work for FreeBSD users -- sorry guys.  They
-    will either have to use a C implementation or find how to decrypt this.
-    """
+def pass_decrypt(p, key=PASSCRYPT_KEY, mode=DES.MODE_CFB):
+    """ Decrypts a password from ClawsMail. """
     if p[0] == '!':  # encrypted password
-        c = DES.new(key, mode=DES.MODE_CFB, IV=b'\0'*8)
-        return c.decrypt(b64decode(p[1:]))
+        buf = b64decode(p[1:])
+
+        """
+        If mode is ECB or CBC and the length of the data is wrong, do nothing
+        as would the libc algorithms (as they fail early).  Yes, this means the
+        password wasn't actually encrypted but only base64-ed.
+        """
+        if (mode in (DES.MODE_ECB, DES.MODE_CBC)) and ((len(buf) % 8) != 0 or
+                                                       len(buf) > 8192):
+            return buf
+
+        c = DES.new(key, mode=mode, IV=b'\0'*8)
+        return c.decrypt(buf)
     else:  # raw password
         return p
 
@@ -83,7 +80,13 @@ def accountrc_decrypt(filename, key=PASSCRYPT_KEY):
 
 if __name__ == '__main__':
     import os
-    from optparse import OptionParser
+    from optparse import OptionParser, OptionValueError
+
+    def mode_callback(option, opt, value, parser):
+        try:
+            parser.values.mode = getattr(DES, 'MODE_'+value.upper())
+        except AttributeError:
+            raise OptionValueError('Invalid mode "%s"' % value)
 
     usage = 'Usage: %prog [OPTIONS] ENCRYPTED_PASS1...|FILE...'
     parser = OptionParser(usage=usage)
@@ -91,6 +94,16 @@ if __name__ == '__main__':
                       help='Use KEY to decode passwords (8 byte string) '
                            '[%default]',
                       metavar='KEY')
+    parser.add_option('-m', '--mode', dest='mode', default=DES.MODE_CFB,
+                      type='string', action='callback', callback=mode_callback,
+                      help='Use MODE to decrypt DES passwords.  Choose ECB to '
+                           'decrypt passwords from FreeBSD installations, CFB '
+                           'otherwise [CFB]',
+                      metavar='MODE')
+    parser.add_option('--freebsd', dest='mode',
+                      action='store_const', const=DES.MODE_ECB,
+                      help='Use ECB mode as needed for passwords from FreeBSD '
+                           '(alias for --mode=ECB)')
     (options, args) = parser.parse_args()
 
     if len(args) < 1:
@@ -100,5 +113,5 @@ if __name__ == '__main__':
             if os.path.exists(a):
                 accountrc_decrypt(a, key=options.key)
             else:
-                password = pass_decrypt(a, key=options.key)
+                password = pass_decrypt(a, key=options.key, mode=options.mode)
                 print('password "%s" is "%s"' % (a, password))
