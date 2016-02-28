@@ -43,15 +43,15 @@ Python tool
 ClawsMail `accountrc` file and extract the address/password information from
 each account in it.
 
-The usage is very simple, use either::
+The usage is very simple, use either:
 
     python clawsmail-passdecrypt.py ~/.claws-mail/accountrc
 
-or::
+or:
 
     python clawsmail-passdecrypt.py 'encryptedpassword'
 
-This will give you something like this::
+This will give you something like this:
 
     $ python clawsmail-passdecrypt.py ~/.claws-mail/accountrc
     password for john@doe.co.uk is "mysecretpassword"
@@ -80,7 +80,7 @@ derivates, it'll be ``apt-get source claws-mail``.  You also need `make` if you
 want to use the Makefile (otherwise check the source code, there is a little
 comment on how to build).
 
-To build the thing, use::
+To build the thing, use:
 
     make CLAWSMAIL_SRC=/path/to/claws-mail/src
 
@@ -91,7 +91,7 @@ but it doesn't support the `-k` switch, the key is builtin.
 
 If you need to decrypt a password from a FreeBSD version of ClawsMail but you
 don't build on FreeBSD, you need to define the `NEED_DES_ECB` C preprocessor
-constant.  You can use::
+constant.  You can use:
 
     make CLAWSMAIL_SRC=/path/to/claws-mail/src CFLAGS='-DNEED_DES_ECB'
 
