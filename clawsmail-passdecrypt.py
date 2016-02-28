@@ -58,7 +58,7 @@ def pass_decrypt(p, key=PASSCRYPT_KEY, mode=DES.MODE_CFB):
         return p
 
 
-def accountrc_decrypt(filename, key=PASSCRYPT_KEY):
+def accountrc_decrypt(filename, key=PASSCRYPT_KEY, mode=DES.MODE_CFB):
     """ Reads passwords from ClawsMail's accountrc file """
     p = ConfigParser()
     p.read(filename)
@@ -72,7 +72,7 @@ def accountrc_decrypt(filename, key=PASSCRYPT_KEY):
                 address = '<unknown>'
                 account = '<unknown>'
 
-            password = pass_decrypt(p.get(s, 'password'), key)
+            password = pass_decrypt(p.get(s, 'password'), key, mode=mode)
             print('password for %s, %s is "%s"' % (account, address, password))
         except Exception as e:
             print('Error resolving password for account "%s": %s' % (s, e))
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     else:
         for a in args:
             if os.path.exists(a):
-                accountrc_decrypt(a, key=options.key)
+                accountrc_decrypt(a, key=options.key, mode=options.mode)
             else:
                 password = pass_decrypt(a, key=options.key, mode=options.mode)
                 print('password "%s" is "%s"' % (a, password))
