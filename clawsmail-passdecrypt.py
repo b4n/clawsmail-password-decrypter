@@ -53,10 +53,15 @@ def pass_decrypt(p, key=PASSCRYPT_KEY, mode=DES.MODE_CFB):
         """
         if (mode in (DES.MODE_ECB, DES.MODE_CBC)) and ((len(buf) % 8) != 0 or
                                                        len(buf) > 8192):
-            return buf
+            d = buf
+        else:
+            c = DES.new(key, mode=mode, IV=b'\0'*8)
+            d = c.decrypt(buf)
 
-        c = DES.new(key, mode=mode, IV=b'\0'*8)
-        return c.decrypt(buf)
+        try:
+            return d.decode()
+        except UnicodeDecodeError:
+            return d
     else:  # raw password
         return p
 
