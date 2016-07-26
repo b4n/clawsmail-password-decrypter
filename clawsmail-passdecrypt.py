@@ -32,7 +32,10 @@
 
 from Crypto.Cipher import DES
 from base64 import standard_b64decode as b64decode
-from ConfigParser import ConfigParser
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser
 
 
 PASSCRYPT_KEY = b'passkey0'
